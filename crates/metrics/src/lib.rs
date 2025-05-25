@@ -8,15 +8,32 @@ use thiserror::Error;
 ///
 /// Stores the total cycle count and a breakdown of cycle count per named region.
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub struct WorkloadMetrics {
-    /// Name of the workload (e.g., "fft", "aes").
-    pub name: String,
-    /// Total number of cycles for the entire workload execution.
-    pub total_num_cycles: u64,
-    /// Region-specific cycles, mapping region names (e.g., "setup", "compute") to their cycle counts.
-    pub region_cycles: HashMap<String, u64>,
-    /// Proving time in milliseconds
-    pub proving_time_ms: u64,
+pub enum WorkloadMetrics {
+    /// Metrics produced when benchmarking in execution mode
+    Execution {
+        /// Name of the workload (e.g., "fft", "aes").
+        name: String,
+        /// Total number of cycles for the entire workload execution.
+        total_num_cycles: u64,
+        /// Region-specific cycles, mapping region names (e.g., "setup", "compute") to their cycle counts.
+        region_cycles: HashMap<String, u64>,
+    },
+    /// Metrics produced when benchmarking in proving mode
+    Proving {
+        /// Name of the workload (e.g., "fft", "aes").
+        name: String,
+        /// Proving time in milliseconds
+        proving_time_ms: u128,
+    },
+    /// Metrics produced when a benchmark crashes/errors
+    Crashed {
+        /// Name of the workload that crashed
+        name: String,
+        /// Action being performed when crash occurred (e.g., "execute", "prove")
+        action: String,
+        /// Reason for the crash (panic message)
+        reason: String,
+    },
 }
 
 /// Errors that can occur during metrics processing.
@@ -42,6 +59,15 @@ impl MetricsError {
 }
 
 impl WorkloadMetrics {
+    /// Returns the name of the workload regardless of the variant.
+    pub fn name(&self) -> &str {
+        match self {
+            WorkloadMetrics::Execution { name, .. } => name,
+            WorkloadMetrics::Proving { name, .. } => name,
+            WorkloadMetrics::Crashed { name, .. } => name,
+        }
+    }
+
     /// Serializes a list of `WorkloadMetrics` into a JSON string.
     ///
     /// # Errors
@@ -103,7 +129,7 @@ mod tests {
     // This is just a fixed sample we are using to test serde_roundtrip
     fn sample() -> Vec<WorkloadMetrics> {
         vec![
-            WorkloadMetrics {
+            WorkloadMetrics::Execution {
                 name: "fft".into(),
                 total_num_cycles: 1_000,
                 region_cycles: HashMap::from_iter([
@@ -111,9 +137,8 @@ mod tests {
                     ("compute".to_string(), 800),
                     ("teardown".to_string(), 100),
                 ]),
-                proving_time_ms: 0,
             },
-            WorkloadMetrics {
+            WorkloadMetrics::Execution {
                 name: "aes".into(),
                 total_num_cycles: 2_000,
                 region_cycles: HashMap::from_iter([
@@ -121,7 +146,19 @@ mod tests {
                     ("encrypt".to_string(), 1_600),
                     ("final".to_string(), 200),
                 ]),
-                proving_time_ms: 0,
+            },
+            WorkloadMetrics::Proving {
+                name: "rsa".into(),
+                proving_time_ms: 5_000,
+            },
+            WorkloadMetrics::Proving {
+                name: "ecdsa".into(),
+                proving_time_ms: 3_500,
+            },
+            WorkloadMetrics::Crashed {
+                name: "sha256".into(),
+                action: "execute".into(),
+                reason: "Out of memory panic".into(),
             },
         ]
     }
@@ -155,5 +192,48 @@ mod tests {
         assert_eq!(workloads, read_back);
 
         Ok(())
+    }
+
+    #[test]
+    fn test_name_accessor() {
+        let execution_metric = WorkloadMetrics::Execution {
+            name: "test_execution".into(),
+            total_num_cycles: 1000,
+            region_cycles: HashMap::new(),
+        };
+
+        let proving_metric = WorkloadMetrics::Proving {
+            name: "test_proving".into(),
+            proving_time_ms: 2000,
+        };
+
+        let crashed_metric = WorkloadMetrics::Crashed {
+            name: "test_crashed".into(),
+            action: "execute".into(),
+            reason: "Test panic".into(),
+        };
+
+        assert_eq!(execution_metric.name(), "test_execution");
+        assert_eq!(proving_metric.name(), "test_proving");
+        assert_eq!(crashed_metric.name(), "test_crashed");
+    }
+
+    #[test]
+    fn test_mixed_metrics_serialization() {
+        let mixed_workloads = vec![
+            WorkloadMetrics::Execution {
+                name: "mixed_execution".into(),
+                total_num_cycles: 500,
+                region_cycles: HashMap::from_iter([("phase1".to_string(), 500)]),
+            },
+            WorkloadMetrics::Proving {
+                name: "mixed_proving".into(),
+                proving_time_ms: 1000,
+            },
+        ];
+
+        let json = WorkloadMetrics::to_json(&mixed_workloads).expect("serialize mixed");
+        let parsed = WorkloadMetrics::from_json(&json).expect("deserialize mixed");
+        assert_eq!(mixed_workloads, parsed);
     }
 }

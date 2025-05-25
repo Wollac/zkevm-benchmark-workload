@@ -3038,17 +3038,62 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
+name = "erased-serde"
+version = "0.4.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e004d887f51fcb9fef17317a2f3525c887d8aa3f4f50fed920816a688284a5b7"
+dependencies = [
+ "serde",
+ "typeid",
+]
+
+[[package]]
 name = "ere-hosts"
 version = "0.1.0"
 dependencies = [
  "benchmark-runner",
+ "clap",
+ "ere-openvm",
+ "ere-risczero",
  "ere-sp1",
+ "strum 0.26.3",
+ "zkvm-interface",
+]
+
+[[package]]
+name = "ere-openvm"
+version = "0.1.0"
+source = "git+https://github.com/eth-applied-research-group/ere#d106f8d65c103c27e23e3cd7ba6a0e8eb7364c78"
+dependencies = [
+ "openvm-build",
+ "openvm-circuit",
+ "openvm-sdk",
+ "openvm-stark-sdk",
+ "openvm-transpiler",
+ "thiserror 2.0.12",
+ "zkvm-interface",
+]
+
+[[package]]
+name = "ere-risczero"
+version = "0.1.0"
+source = "git+https://github.com/eth-applied-research-group/ere#d106f8d65c103c27e23e3cd7ba6a0e8eb7364c78"
+dependencies = [
+ "anyhow",
+ "borsh",
+ "hex",
+ "risc0-zkvm",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.12",
+ "toml",
+ "zkvm-interface",
 ]
 
 [[package]]
 name = "ere-sp1"
 version = "0.1.0"
-source = "git+https://github.com/eth-applied-research-group/ere#36fa788dd3c2b48ea70b01d2aedd34b7859da450"
+source = "git+https://github.com/eth-applied-research-group/ere#d106f8d65c103c27e23e3cd7ba6a0e8eb7364c78"
 dependencies = [
  "bincode",
  "indexmap 2.9.0",
@@ -6213,18 +6258,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "openvm-host"
-version = "0.1.0"
-dependencies = [
- "eyre",
- "openvm-build",
- "openvm-sdk",
- "openvm-transpiler",
- "witness-generator",
- "zkevm-metrics",
-]
-
-[[package]]
 name = "openvm-instructions"
 version = "1.1.1"
 source = "git+https://github.com/openvm-org/openvm.git?tag=v1.1.1#2f9bf748a7e6130d530adbefb6a6507278098ff5"
@@ -6704,6 +6737,7 @@ dependencies = [
  "p3-maybe-rayon 0.1.0 (git+https://github.com/Plonky3/Plonky3.git?rev=1ba4e5c)",
  "p3-uni-stark 0.1.0 (git+https://github.com/Plonky3/Plonky3.git?rev=1ba4e5c)",
  "p3-util 0.1.0 (git+https://github.com/Plonky3/Plonky3.git?rev=1ba4e5c)",
+ "rayon",
  "rustc-hash 2.1.1",
  "serde",
  "thiserror 1.0.69",
@@ -7340,6 +7374,9 @@ dependencies = [
 name = "p3-maybe-rayon"
 version = "0.1.0"
 source = "git+https://github.com/Plonky3/Plonky3.git?rev=1ba4e5c#1ba4e5c40417f4f7aae86bcca56b6484b4b2490b"
+dependencies = [
+ "rayon",
+]
 
 [[package]]
 name = "p3-maybe-rayon"
@@ -9935,19 +9972,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "risc0-host"
-version = "0.1.0"
-dependencies = [
- "benchmark-runner",
- "methods",
- "risc0-zkvm",
- "serde",
- "tracing-subscriber 0.3.19",
- "witness-generator",
- "zkevm-metrics",
-]
-
-[[package]]
 name = "risc0-zkos-v1compat"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -11571,17 +11595,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "succinct-host"
-version = "0.1.0"
-dependencies = [
- "benchmark-runner",
- "dotenv",
- "sp1-sdk",
- "witness-generator",
- "zkevm-metrics",
-]
-
-[[package]]
 name = "svm-rs"
 version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12427,6 +12440,12 @@ dependencies = [
  "tower 0.5.2",
  "url",
 ]
+
+[[package]]
+name = "typeid"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc7d623258602320d5c55d1bc22793b57daff0ec7efc270ea7d55ce1d5f5471c"
 
 [[package]]
 name = "typenum"
@@ -14024,10 +14043,12 @@ dependencies = [
 [[package]]
 name = "zkvm-interface"
 version = "0.1.0"
-source = "git+https://github.com/eth-applied-research-group/ere#36fa788dd3c2b48ea70b01d2aedd34b7859da450"
+source = "git+https://github.com/eth-applied-research-group/ere#d106f8d65c103c27e23e3cd7ba6a0e8eb7364c78"
 dependencies = [
  "anyhow",
+ "auto_impl",
  "bincode",
+ "erased-serde",
  "indexmap 2.9.0",
  "serde",
  "thiserror 2.0.12",
